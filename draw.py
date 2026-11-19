@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NEWS-IMAGE-20261119 V1 — built on our V2.6 architecture (white masthead, hero 1+2, horizontal grid, outline map + blue pins, numbers bar bottom, italic date check, WHITE paper), 40 stories all Thursday 19 November 2026. Own layout, own words — NOT a copy of Rank #1 or Rank #2.
+"""NEWS-IMAGE-20261119 V2 — Rank #2 LOOK (owner order: bikin seperti ini, dari segi warna apapun, table nya) — cream paper, numbers bar on TOP, 3 heroes across, box grid, navy dot-matrix map + red pins, Date Check red box. ALL sentences REWRITTEN (different words from V1 and from Rank #2, same 40 stories/themes). 40 stories, all Thursday 19 November 2026. Own words — the LOOK follows Rank #2 per owner order, the SENTENCES are all ours.
 front page (owner-supplied). Architecture is ours, words are ours: nothing
 is copied from either reference — no headline, no label, no sentence.
 
@@ -39,10 +39,13 @@ FONT_DIR = "/usr/share/fonts/truetype/dejavu"
 
 # ---------- palette (black + white + brick red + dark blue only) ----------
 INK = (18, 18, 18)
-PAPER = (255, 255, 255)          # clean white paper, 19 Nov (NOT cream)
+PAPER = (247, 240, 230)          # Rank #2 warm cream paper
 BRICK = (178, 60, 40)          # brick red accent
 NAVY2 = (20, 50, 90)           # dark blue accent
 NAVYBLUE = NAVY2
+RED2 = (158, 40, 52)            # Rank #2 dark brick red (numbers, kickers, subtitle)
+NAVYMAP = (23, 48, 79)          # Rank #2 dark navy (dot-matrix map)
+PINRED = (185, 76, 79)          # Rank #2 red map pins
 NAVYBLUE = NAVY2
 GREY = (90, 90, 90)
 # ---------- region colours (V2.5: colourful) ----------
@@ -493,98 +496,138 @@ def mini19(d, kind, x, y, w, h):
     else:
         mini_visual(d, kind, x, y, w, h)
 
-# ---------- 19 Nov story data — FINAL 40, order fixed by owner, do not change ----------
-# kicker: (number, region-label, topic, region-colour-key, source)
+
+# ---------- Rank #2 dot-matrix map (navy dots) + red pins ----------
+def _inside_poly(x, y, poly):
+    inside = False
+    n = len(poly)
+    j = n - 1
+    for i in range(n):
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        if ((yi > y) != (yj > y)) and (x < (xj - xi) * (y - yi) / (yj - yi) + xi):
+            inside = not inside
+        j = i
+    return inside
+
+
+def draw_dotmap(d, x0, y0, mw, mh, step=8, r=2):
+    """Navy dot-matrix world map (Rank #2 style): dots inside the continents."""
+    for poly in CONTINENTS.values():
+        pts = [lonlat_to_xy(lon, lat, x0, y0, mw, mh) for lon, lat in poly]
+        minx = min(p[0] for p in pts); maxx = max(p[0] for p in pts)
+        miny = min(p[1] for p in pts); maxy = max(p[1] for p in pts)
+        gx = minx
+        while gx <= maxx:
+            gy = miny
+            while gy <= maxy:
+                if _inside_poly(gx, gy, pts):
+                    d.ellipse([gx - r, gy - r, gx + r, gy + r], fill=NAVYMAP)
+                gy += step
+            gx += step
+
+
+def draw_pin_red(d, x, y, num):
+    r = 7
+    d.ellipse([x - r, y - r, x + r, y + r], fill=PINRED, outline=(255, 255, 255), width=1)
+    f = F_SANS_B(8)
+    tw = text_w(d, str(num), f)
+    d.text((x - tw / 2, y - 6), str(num), font=f, fill=(255, 255, 255))
+
+
+# ---------- V2 story data — SAME 40 stories, ALL sentences REWRITTEN ----------
+# (different words from V1 and from Rank #2, same themes/facts)
 HEROES = [
-    {"n": 1, "kind": "shenzhen", "region": "ASIA", "topic": "APEC SUMMIT",
+    {"n": 1, "kind": "shenzhen", "region": "SHENZHEN", "topic": "SUMMIT",
      "rc": "ASIA", "src": "REUTERS",
-     "headline": "Trump, Xi and Putin hold first three-way summit",
-     "body": "The US, Chinese and Russian leaders meet together for the first time, on APEC's last day. Arms control and the Iran war on the agenda. Putin backs the draft Shenzhen Declaration."},
-    {"n": 2, "kind": "gta", "region": "WORLD", "topic": "GAMES",
+     "headline": "Shenzhen hosts a first: three leaders at one table",
+     "body": "For the first time, the American, Chinese and Russian presidents sit down together, on APEC's closing day. Arms control and the Iran war top the talks. Putin backs the draft Shenzhen Declaration."},
+    {"n": 2, "kind": "gta", "region": "WORLDWIDE", "topic": "GAMES",
      "rc": "WORLD", "src": "ROCKSTAR",
-     "headline": "GTA VI arrives after a 13-year wait",
-     "body": "Unlocks at midnight in each country, New Zealand first. 15.9m pre-orders banked. $79.99 on PS5 and Xbox Series X|S; no PC yet."},
-    {"n": 3, "kind": "anthropic", "region": "AMERICAS", "topic": "MARKETS",
+     "headline": "After thirteen years, GTA VI is out at last",
+     "body": "The sequel goes live at midnight in every country, with New Zealand first in line. Fans banked 15.9m pre-orders. It costs $79.99 on PS5 and Xbox Series X|S; the PC version is still to come."},
+    {"n": 3, "kind": "anthropic", "region": "NEW YORK", "topic": "MARKETS",
      "rc": "AMERICAS", "src": "NASDAQ",
-     "headline": "Anthropic debuts in the biggest IPO ever",
-     "body": "Priced at $83, above the $70-78 range. $81.3bn raised, valuing the Claude maker near $1.5tn. First trades on Thursday."},
+     "headline": "Claude's maker lists in the largest flotation on record",
+     "body": "Shares were priced at $83, above the $70-78 range, raising $81.3bn — the biggest IPO ever — and valuing the firm near $1.5tn. Trading begins on Thursday."},
 ]
 
-# grid 4-13: horizontal strips, visual left + text right
 GRID = [
     {"n": 4, "kind": "court", "region": "THE HAGUE", "topic": "LAW", "rc": "EUROPE",
-     "headline": "World Court rules on Myanmar's Rohingya case",
-     "body": "ICJ judgment on Gambia's case over the 2017 crackdown. 730,000 fled in 2017."},
+     "headline": "The Hague delivers its verdict on Myanmar",
+     "body": "The World Court rules on Gambia's case over the 2017 crackdown. The judgment is final. Some 730,000 fled in 2017."},
     {"n": 5, "kind": "globe", "region": "ANTALYA", "topic": "CLIMATE", "rc": "EUROPE",
-     "headline": "COP31 enters its final 48 hours",
-     "body": "Ministers take over. Phase-out and a $120bn adaptation fund still open."},
+     "headline": "Climate talks go down to the wire in Antalya",
+     "body": "Ministers take over as the summit enters its final two days. A fossil-fuel phase-out and a $120bn adaptation fund are still unresolved."},
     {"n": 6, "kind": "cyclone", "region": "ODISHA", "topic": "STORM", "rc": "ASIA",
-     "headline": "Cyclone Akvan bears down",
-     "body": "200,000 flee the coast. Red alert in 11 districts, schools shut. Landfall near Puri on Friday."},
+     "headline": "A cyclone closes in on Odisha's coast",
+     "body": "Some 200,000 people leave the coast. Eleven districts are on red alert and schools are shut. Landfall is expected near Puri on Friday."},
     {"n": 7, "kind": "eye", "region": "KYIV", "topic": "WAR", "rc": "EUROPE",
-     "headline": "Ukraine left off the agenda, watches Shenzhen",
-     "body": "White House says Kyiv fears being carved up as the three leaders meet."},
+     "headline": "Kyiv watches the summit from the sidelines",
+     "body": "Ukraine is not on the Shenzhen agenda. The White House says Kyiv fears being carved up as the three leaders meet."},
     {"n": 8, "kind": "bars", "region": "SHENZHEN", "topic": "TRADE", "rc": "ASIA",
-     "headline": "APEC leaders adopt the Shenzhen Declaration",
-     "body": "21 economies back digital trade and an Asia-Pacific community roadmap."},
+     "headline": "Twenty-one economies sign up to the Shenzhen plan",
+     "body": "APEC's leaders back a declaration on digital trade and a roadmap for an Asia-Pacific community."},
     {"n": 9, "kind": "rain", "region": "FLORIDA", "topic": "WEATHER", "rc": "AMERICAS",
-     "headline": "Flooded Florida braces",
-     "body": "A foot of rain in hours in Hollywood. 300 rescue calls in a night. Schools shut on Thursday."},
+     "headline": "Florida counts the cost of a foot of rain",
+     "body": "Hollywood saw a foot of rain in hours. Crews answered 300 rescue calls in a night. Schools stay shut on Thursday."},
     {"n": 10, "kind": "layers", "region": "SCIENCE", "topic": "GEOLOGY", "rc": "WORLD",
-     "headline": "Earth's missing billion years explained",
-     "body": "A Nature study blames mantle currents and ancient ice sheets."},
+     "headline": "A study solves Earth's billion-year gap",
+     "body": "A Nature study pins the missing billion years on mantle currents and ancient ice sheets."},
     {"n": 11, "kind": "ballot", "region": "PARIS", "topic": "POLITICS", "rc": "EUROPE",
-     "headline": "Melenchon could win, says France's justice minister",
-     "body": "The hard-left leader is a plausible president, the minister says."},
+     "headline": "France's justice minister: Melenchon could win",
+     "body": "The hard-left leader is a plausible next president, the minister says."},
     {"n": 12, "kind": "shield", "region": "JAZAN", "topic": "GULF", "rc": "MIDDLE EAST",
-     "headline": "Saudi says danger has passed in three cities",
-     "body": "All-clear after a Houthi missile was downed."},
+     "headline": "Saudi gives the all-clear in three cities",
+     "body": "The danger has passed after a Houthi missile was shot down, Riyadh says."},
     {"n": 13, "kind": "pills", "region": "BENGHAZI", "topic": "CRIME", "rc": "AFRICA",
-     "headline": "Cocaine and millions of pills seized in eastern Libya",
-     "body": "Officials display the biggest drug hauls."},
+     "headline": "Libya shows off its biggest drug seizures",
+     "body": "Officials in eastern Libya display cocaine and millions of pills in the largest hauls yet."},
 ]
 
-# also today 14-40: (number, place, text) — full text, never truncated
 ALSO = [
-    (14, "GAZA", "Israeli tanks cross Yellow Line, Hamas calls truce breach."),
-    (15, "CRIMEA", "Bridge attacked again, traffic halted. Ukraine claims strike, Russia says intercepted."),
-    (16, "LONDON", "Van Gogh sells for record $190.4m after 9-hour NGA history."),
-    (17, "MEXICO CITY", "Banxico minutes: board cut rates to 6.25%."),
-    (18, "CANBERRA", "Australia sanctions West Bank settlers, 3 people + 4 groups."),
-    (19, "MOGADISHU", "Somalia accuses UAE of secret military bases."),
-    (20, "FRANKFURT", "Deutsche Bank handed $90m fine, Epstein ties, FT reports."),
-    (21, "WASHINGTON", "Senators warn cyber risk to AI, seek tighter rules."),
-    (22, "OTTAWA", "Carney: Canada rethinks China ties, seeks reset."),
-    (23, "NEW DELHI", "Modi meets Prince + Princess of Wales, UK state visit."),
-    (24, "TOKYO", "India + Japan review defence ties after 2+2 dialogue."),
-    (25, "BENGALURU", "Amazon pledges $7.8bn for India AI."),
-    (26, "SYDNEY", "Duckett 133 puts England 1-0 in ODI vs Australia."),
-    (27, "WELLINGTON", "NZ unlocks GTA VI at midnight, first in world."),
-    (28, "BAGHDAD", "Six French ISIL members jailed for life in Iraq."),
-    (29, "DHAKA", "Bangladesh: Yunus ancestral home set on fire, 28 districts hit by violence."),
-    (30, "GULF", "Kuwait activates air defenses vs drones, Bahrain thwarts Iranian assault, after US Qeshm strike 17 Nov."),
-    (31, "WASHINGTON", "Jeffries formally nominated Speaker. (251-11 vote was 18 Nov; 19 Nov is the formal nomination.)"),
+    (14, "GAZA", "Israeli tanks cross the Yellow Line; Hamas calls it a breach of the truce."),
+    (15, "CRIMEA", "The bridge is hit again and traffic stops. Kyiv claims the strike; Moscow says it was intercepted."),
+    (16, "LONDON", "A Van Gogh fetches a record $190.4m after nine hours of bidding at the NGA."),
+    (17, "MEXICO CITY", "Banxico's minutes show the board cut rates to 6.25%."),
+    (18, "CANBERRA", "Australia sanctions three people and four groups over West Bank settlements."),
+    (19, "MOGADISHU", "Somalia accuses the UAE of running secret military bases."),
+    (20, "FRANKFURT", "Deutsche Bank is fined $90m over Epstein ties, the FT reports."),
+    (21, "WASHINGTON", "Senators warn of cyber risk to AI and call for tighter rules."),
+    (22, "OTTAWA", "Carney says Canada is rethinking its China ties and wants a reset."),
+    (23, "NEW DELHI", "Modi meets the Prince and Princess of Wales on their UK state visit."),
+    (24, "TOKYO", "India and Japan review defence ties after their 2+2 dialogue."),
+    (25, "BENGALURU", "Amazon pledges $7.8bn for AI in India."),
+    (26, "SYDNEY", "Duckett's 133 puts England 1-0 up in the ODI against Australia."),
+    (27, "WELLINGTON", "New Zealand is first in the world to unlock GTA VI at midnight."),
+    (28, "BAGHDAD", "Six French ISIL members are jailed for life in Iraq."),
+    (29, "DHAKA", "Yunus's ancestral home is set on fire as violence hits 28 districts in Bangladesh."),
+    (30, "GULF", "Kuwait switches on air defences against drones and Bahrain foils an Iranian assault, days after the US Qeshm strike."),
+    (31, "WASHINGTON", "Jeffries is formally nominated as Speaker. (The 251-11 vote was on 18 Nov; the formal nomination is today.)"),
     (32, "WASHINGTON", "Garcia sends 12 preservation letters to Trump allies."),
-    (33, "WASHINGTON", "US loses measles elimination status, Dems attack RFK Jr."),
-    (34, "WASHINGTON", "House Dems probe Lutnick - Nvidia."),
-    (35, "SEOUL", "Suneung: 551,864 sit Korea's college exam, flights pause."),
-    (36, "TOKYO SIDE", "Takaichi meets Putin, Japan-Russia talks on APEC sidelines."),
-    (37, "TAIWAN", "Taiwan reports Tu-95 overflight east of island, second time this week."),
-    (38, "ADDIS ABABA", "Ethiopia-Eritrea: troops mass at border."),
-    (39, "GENEVA", "WHO warns antibiotic resistance worsening worldwide since 2019."),
-    (40, "SYDNEY SIDE", "Data centres may add 39m t CO2 a year by 2035."),
+    (33, "WASHINGTON", "The US loses its measles elimination status; Democrats attack RFK Jr."),
+    (34, "WASHINGTON", "House Democrats open a probe into Lutnick and Nvidia."),
+    (35, "SEOUL", "Suneung: 551,864 sit South Korea's college exam as flights pause."),
+    (36, "TOKYO SIDE", "Takaichi meets Putin for Japan-Russia talks on the APEC sidelines."),
+    (37, "TAIWAN", "Taiwan reports a Tu-95 overflight east of the island, the second this week."),
+    (38, "ADDIS ABABA", "Ethiopia and Eritrea mass troops at the border."),
+    (39, "GENEVA", "The WHO warns antibiotic resistance has worsened worldwide since 2019."),
+    (40, "SYDNEY SIDE", "Data centres may add 39m tonnes of CO2 a year by 2035."),
 ]
 
 NUMBERS = [
-    ("$81.3bn", "Anthropic IPO"),
-    ("15.9m", "GTA VI pre-orders"),
-    ("200,000", "evacuated Akvan"),
-    ("$120bn", "COP31 finance unresolved"),
-    ("730,000", "Rohingya fled 2017"),
-    ("16bn miles", "Voyager 1"),
+    ("$81.3bn", "Anthropic's record IPO"),
+    ("13 years", "since GTA V; sequel out today"),
+    ("551,864", "sit Korea's college exam"),
+    ("200,000", "moved to safety in Odisha"),
+    ("$120bn", "COP31 finance goal still open"),
+    ("730,000", "Rohingya fled Myanmar in 2017"),
 ]
 
-DATE_CHECK = ("Date check — left off on purpose because they broke before Thursday: "
+SUBTITLE = ("A first three-way summit in Shenzhen · GTA VI goes on sale at midnight · "
+            "The biggest IPO ever lists · The World Court rules on Myanmar")
+
+DATE_CHECK = ("DATE CHECK — left off on purpose because they broke before Thursday: "
               "EU proposes €450m Ukraine loan (18 Nov) · House Dems' 251-11 Jeffries vote (18 Nov) · "
               "Voyager 1 one light-day 10:16 GMT Wed (18 Nov) · Peltola Alaska win (18 Nov) · "
               "Pew Islam largest by 2035 (18 Nov) · US strikes on Iran's Qeshm Island (17 Nov)")
@@ -592,97 +635,11 @@ DATE_CHECK = ("Date check — left off on purpose because they broke before Thur
 FOOTER_SRC = ("Every story here happened, or was first reported, on Thursday 19 November 2026. "
               "Sources: Reuters, AP, AFP, BBC, The Hindu, IMD, NASA, ICJ, Pew.")
 
-# map pins for the visual stories 1-13 (lon, lat); 10 has no location (global science)
-# pins offset where two stories share a city (Paris/The Hague, NYC/NASDAQ,
-# Shenzhen/APEC) so no two pins touch; schematic offsets, story numbers unchanged
 PINS = {
-    1: (114.1, 22.5), 2: (-74.0, 40.7), 3: (-62.0, 44.0), 4: (4.3, 52.1),
-    5: (30.7, 36.9), 6: (85.8, 20.3), 7: (30.5, 50.5), 8: (126.0, 22.5),
-    9: (-80.2, 25.8), 11: (-6.0, 45.0), 12: (42.5, 16.9), 13: (20.1, 32.1),
+    1: (114.1, 22.5), 2: (-74.0, 40.7), 3: (-54.0, 48.0), 4: (4.3, 52.1),
+    5: (30.7, 36.9), 6: (85.8, 20.3), 7: (30.5, 50.5), 8: (134.0, 30.0),
+    9: (-80.2, 25.8), 11: (-10.0, 42.0), 12: (42.5, 16.9), 13: (16.0, 28.0),
 }
-PIN_RC = {1: "ASIA", 2: "WORLD", 3: "AMERICAS", 4: "EUROPE", 5: "EUROPE",
-          6: "ASIA", 7: "EUROPE", 8: "ASIA", 9: "AMERICAS", 11: "EUROPE",
-          12: "MIDDLE EAST", 13: "AFRICA"}
-LEGEND = [("Americas", "AMERICAS"), ("Asia", "ASIA"), ("Europe", "EUROPE"),
-          ("Middle East", "MIDDLE EAST"), ("Africa", "AFRICA"),
-          ("Oceania", "OCEANIA"), ("World", "WORLD")]
-
-def draw_pin_small(d, x, y, num, fill=None):
-    r = 6
-    if fill is None:
-        fill = NAVY2
-    d.ellipse([x - r, y - r, x + r, y + r], fill=fill, outline=(255, 255, 255), width=1)
-    f = F_SANS_B(7)
-    tw = text_w(d, str(num), f)
-    d.text((x - tw / 2, y - 5), str(num), font=f, fill=(255, 255, 255))
-
-
-# ---------- layout ----------
-def kicker_bar(d, x, y, w, n, region, topic, rc, src):
-    """Coloured kicker bar: black number box + region/topic + source (white)."""
-    col = REGION_COLORS[rc]
-    d.rectangle([x, y, x + w, y + 18], fill=col)
-    d.rectangle([x, y, x + 24, y + 18], fill=(0, 0, 0))
-    f = F_SANS_B(10)
-    tw = text_w(d, str(n), f)
-    d.text((x + (24 - tw) / 2, y + 3), str(n), font=f, fill=(255, 255, 255))
-    d.text((x + 30, y + 3), f"{region} · {topic}", font=F_SANS_B(9),
-           fill=(255, 255, 255))
-    sw = text_w(d, src, F_SANS_B(8))
-    d.text((x + w - sw - 6, y + 4), src, font=F_SANS_B(8), fill=(255, 255, 255))
-
-
-def hero_block(d, hero, x, y, w, h, big):
-    """One hero: border, visual, kicker bar, headline, body. Returns issues."""
-    issues = []
-    d.rectangle([x, y, x + w, y + h], outline=INK, width=1)
-    if big:
-        vis_h, kick_y, head_y, head_size, body_size, body_y = 106, 108, 132, 15, 10, 162
-    else:
-        vis_h, kick_y, head_y, head_size, body_size, body_y = 46, 48, 68, 12, 8, 88
-    hero_visual19(d, hero["kind"], x + 2, y + 2, w - 4, vis_h)
-    kicker_bar(d, x + 2, y + kick_y, w - 4, hero["n"], hero["region"],
-               hero["topic"], hero["rc"], hero["src"])
-    hl = wrap(d, hero["headline"], F_SERIF_B(head_size), w - 14)
-    if len(hl) > 2:
-        issues.append(f"hero {hero['n']} headline {len(hl)} lines")
-    yy = y + head_y
-    for line in hl[:2]:
-        d.text((x + 7, yy), line, font=F_SERIF_B(head_size), fill=INK)
-        yy += head_size + 3
-    bl = wrap(d, hero["body"], F_SANS(body_size), w - 14)
-    max_bl = 4 if big else 2
-    if len(bl) > max_bl:
-        issues.append(f"hero {hero['n']} body {len(bl)} lines > {max_bl}")
-    yy = y + body_y
-    for line in bl[:max_bl]:
-        d.text((x + 7, yy), line, font=F_SANS(body_size), fill=(40, 40, 40))
-        yy += body_size + 3
-    return issues
-
-
-def grid_cell(d, s, x, y, w, h):
-    """One horizontal grid strip: visual left, kicker + headline + body right."""
-    issues = []
-    d.rectangle([x, y, x + w, y + h], outline=(150, 150, 150), width=1)
-    mini19(d, s["kind"], x + 2, y + 2, 74, h - 4)
-    tx = x + 82
-    tw = w - 88
-    d.text((tx, y + 3), f"{s['n']} · {s['region']} · {s['topic']}",
-           font=F_SANS_B(8), fill=REGION_COLORS[s["rc"]])
-    hl = wrap(d, s["headline"], F_SERIF_B(11), tw)
-    if len(hl) > 1:
-        issues.append(f"grid {s['n']} headline {len(hl)} lines")
-    d.text((tx, y + 14), hl[0] if hl else "", font=F_SERIF_B(11), fill=INK)
-    bl = wrap(d, s["body"], F_SANS(8), tw)
-    if len(bl) > 2:
-        issues.append(f"grid {s['n']} body {len(bl)} lines > 2")
-    yy = y + 28
-    for line in bl[:2]:
-        d.text((tx, yy), line, font=F_SANS(8), fill=(40, 40, 40))
-        yy += 10
-    return issues
-
 
 def wrap_first_rest(d, text, f, first_w, rest_w):
     """Wrap text where line 1 has width first_w and later lines rest_w."""
@@ -709,6 +666,56 @@ def wrap_first_rest(d, text, f, first_w, rest_w):
     return [ln for ln in lines if ln]
 
 
+def hero2(d, hero, x, y, w, h):
+    """Rank #2 hero: border, visual on top, RED kicker, serif headline, body."""
+    issues = []
+    d.rectangle([x, y, x + w, y + h], outline=(120, 120, 120), width=1)
+    hero_visual19(d, hero["kind"], x + 1, y + 1, w - 2, 90)
+    ky = y + 92
+    d.text((x + 6, ky), f"{hero['n']} {hero['region']} · {hero['topic']}",
+           font=F_SANS_B(9), fill=RED2)
+    sw = text_w(d, hero["src"], F_SANS_B(8))
+    d.text((x + w - sw - 6, ky + 1), hero["src"], font=F_SANS_B(8), fill=(110, 110, 110))
+    hl = wrap(d, hero["headline"], F_SERIF_B(15), w - 12)
+    if len(hl) > 2:
+        issues.append(f"hero {hero['n']} headline {len(hl)} lines")
+    yy = ky + 16
+    for line in hl[:2]:
+        d.text((x + 6, yy), line, font=F_SERIF_B(15), fill=INK)
+        yy += 18
+    bl = wrap(d, hero["body"], F_SANS(9), w - 12)
+    if len(bl) > 3:
+        issues.append(f"hero {hero['n']} body {len(bl)} lines > 3")
+    for line in bl[:3]:
+        d.text((x + 6, yy), line, font=F_SANS(9), fill=(40, 40, 40))
+        yy += 12
+    return issues
+
+
+def grid2(d, s, x, y, w, h):
+    """Rank #2 grid box: border, visual on top, RED kicker, serif headline, body."""
+    issues = []
+    d.rectangle([x, y, x + w, y + h], outline=(150, 150, 150), width=1)
+    mini19(d, s["kind"], x + 1, y + 1, w - 2, 40)
+    ky = y + 42
+    d.text((x + 5, ky), f"{s['n']} · {s['region']} · {s['topic']}",
+           font=F_SANS_B(8), fill=RED2)
+    hl = wrap(d, s["headline"], F_SERIF_B(11), w - 10)
+    if len(hl) > 2:
+        issues.append(f"grid {s['n']} headline {len(hl)} lines")
+    yy = ky + 12
+    for line in hl[:2]:
+        d.text((x + 5, yy), line, font=F_SERIF_B(11), fill=INK)
+        yy += 14
+    bl = wrap(d, s["body"], F_SANS(8), w - 10)
+    if len(bl) > 3:
+        issues.append(f"grid {s['n']} body {len(bl)} lines > 3")
+    for line in bl[:3]:
+        d.text((x + 5, yy), line, font=F_SANS(8), fill=(40, 40, 40))
+        yy += 10
+    return issues
+
+
 def main():
     W, H = 1024, 1024
     im = Image.new("RGB", (W, H), PAPER)
@@ -716,80 +723,91 @@ def main():
     issues = []
     d.rectangle([2, 2, W - 3, H - 3], outline=INK, width=2)
 
-    # ---- masthead (white, THE WORLD black serif, centred) ----
-    draw_centered(d, W // 2, 6, "40 STORIES · 7 REGIONS · 13 DRAWN · ALL FROM THURSDAY",
-                  F_SANS_B(9), (110, 110, 110))
-    draw_centered(d, W // 2, 16, "THE WORLD", F_SERIF_B(46), INK)
-    draw_centered(d, W // 2, 66, "Thursday 19 November 2026", F_SERIF(16), INK)
-    d.line([8, 86, W - 8, 86], fill=INK, width=2)
+    # ---- tagline row (Rank #2: red left, grey right) ----
+    d.text((8, 8), "THE WORLD IN ONE PICTURE", font=F_SANS_B(10), fill=RED2)
+    rt = "40 STORIES · EVERY ONE FROM THURSDAY 19 NOVEMBER"
+    d.text((W - 8 - text_w(d, rt, F_SANS_B(9)), 9), rt, font=F_SANS_B(9),
+           fill=(110, 110, 110))
+    # ---- title (large black serif, left) ----
+    d.text((8, 22), "Thursday 19 November 2026", font=F_SERIF_B(40), fill=INK)
+    # ---- subtitle (red line) ----
+    d.text((8, 66), SUBTITLE, font=F_SERIF_I(12), fill=RED2)
+    d.line([8, 86, W - 8, 86], fill=INK, width=1)
 
-    # ---- heroes: Shenzhen big left (60%), GTA + Anthropic stacked right ----
-    issues += hero_block(d, HEROES[0], 8, 92, 604, 236, big=True)
-    issues += hero_block(d, HEROES[1], 620, 92, 396, 116, big=False)
-    issues += hero_block(d, HEROES[2], 620, 214, 396, 114, big=False)
+    # ---- numbers bar on TOP (Rank #2: red numbers, grey labels) ----
+    nb_y, nb_h = 92, 38
+    col_w = (W - 16) / 6.0
+    for i, (num, label) in enumerate(NUMBERS):
+        cx = 8 + col_w * i + col_w / 2
+        draw_centered(d, cx, nb_y, num, F_SERIF_B(18), RED2)
+        ll = wrap(d, label, F_SANS(8), col_w - 12)
+        yy = nb_y + 22
+        for line in ll[:2]:
+            draw_centered(d, cx, yy, line, F_SANS(8), (90, 90, 90))
+            yy += 10
+        if i > 0:
+            d.line([8 + col_w * i, nb_y + 2, 8 + col_w * i, nb_y + nb_h - 2],
+                   fill=(180, 180, 180), width=1)
+    d.line([8, nb_y + nb_h + 4, W - 8, nb_y + nb_h + 4], fill=INK, width=1)
 
-    # ---- grid 4-13: 2 columns x 5 rows, horizontal strips ----
-    gy0, gh, gap = 336, 48, 4
+    # ---- heroes: 3 across ----
+    hy, hh = 140, 190
+    hw = (W - 16 - 2 * 8) / 3.0
+    for i, hero in enumerate(HEROES):
+        hx = 8 + i * (hw + 8)
+        issues += hero2(d, hero, hx, hy, hw, hh)
+
+    # ---- grid: 5 columns x 2 rows = stories 4-13 ----
+    gy0, gh, gap = 338, 118, 6
+    gw = (W - 16 - 4 * gap) / 5.0
     for i, s in enumerate(GRID):
-        col, row = i % 2, i // 2
-        gx = 8 if col == 0 else 516
+        col, row = i % 5, i // 5
+        gx = 8 + col * (gw + gap)
         gy = gy0 + row * (gh + gap)
-        issues += grid_cell(d, s, gx, gy, 500, gh)
+        issues += grid2(d, s, gx, gy, gw, gh)
 
     # ---- map + also today ----
     d.text((8, 584), "WHERE IT HAPPENED", font=F_SANS_B(13), fill=INK)
-    d.text((478, 584), "ALSO ON THURSDAY", font=F_SANS_B(13), fill=INK)
+    d.text((408, 584), "ALSO ON THURSDAY 19 NOVEMBER", font=F_SANS_B(13), fill=INK)
     d.line([8, 602, W - 8, 602], fill=INK, width=1)
-    # legend (coloured dots + region names)
-    lx = 8
-    for name, rc in LEGEND:
-        d.ellipse([lx, 608, lx + 8, 616], fill=REGION_COLORS[rc])
-        d.text((lx + 11, 607), name, font=F_SANS(8), fill=(60, 60, 60))
-        lx += 11 + text_w(d, name, F_SANS(8)) + 10
-    # outline map + blue pins
-    draw_world_map_outline(d, 12, 624, 462, 208)
+    # navy dot-matrix map + red pins
+    draw_dotmap(d, 12, 608, 380, 210)
     for n, (lon, lat) in PINS.items():
-        px, py = lonlat_to_xy(lon, lat, 12, 624, 462, 208)
-        draw_pin_small(d, px, py, n, fill=REGION_COLORS[PIN_RC[n]])
-    d.text((8, 838), "Story 10 is global science, so it has no pin on this map.",
+        px, py = lonlat_to_xy(lon, lat, 12, 608, 380, 210)
+        draw_pin_red(d, px, py, n)
+    d.text((8, 824), "Red = stories 1-13. Story 10 is global science, so it has no pin.",
            font=F_SANS_I(8), fill=(100, 100, 100))
     # also-today list, 2 columns, full text, never truncated
-    cols = [(478, ALSO[:14]), (752, ALSO[14:])]
+    cols = [(408, ALSO[:14]), (712, ALSO[14:])]
     for cx, items in cols:
         yy = 608
         for n, place, text in items:
             head = f"{n} {place} — "
-            hw = text_w(d, head, F_SANS_B(8))
-            # wrap body: line 1 shares the row with the bold head, rest full width
-            bl = wrap_first_rest(d, text, F_SANS(8), 264 - hw, 264)
+            hw2 = text_w(d, head, F_SANS_B(8))
+            bl = wrap_first_rest(d, text, F_SANS(8), 296 - hw2, 296)
             if len(bl) > 2:
                 issues.append(f"also {n} body {len(bl)} lines > 2")
             d.text((cx, yy), head, font=F_SANS_B(8), fill=INK)
-            xx = cx + hw
+            xx = cx + hw2
             for j, line in enumerate(bl[:2]):
-                d.text((xx if j == 0 else cx, yy + j * 10), line,
+                d.text((xx if j == 0 else cx, yy + j * 9), line,
                        font=F_SANS(8), fill=(40, 40, 40))
-            yy += len(bl[:2]) * 10 + 2
-        # remember the tallest column for the section bottom (not used further)
+            yy += len(bl[:2]) * 9 + 1
 
-    # ---- numbers bar: 6 white boxes, black border, at the bottom ----
-    nb_y, nb_h, nb_w, nb_gap = 906, 50, 162, 6
-    for i, (num, label) in enumerate(NUMBERS):
-        bx = 8 + i * (nb_w + nb_gap)
-        d.rectangle([bx, nb_y, bx + nb_w, nb_y + nb_h], fill=(255, 255, 255),
-                    outline=INK, width=1)
-        draw_centered(d, bx + nb_w // 2, nb_y + 6, num, F_SERIF_B(16), INK)
-        draw_centered(d, bx + nb_w // 2, nb_y + 28, label, F_SANS(8), (60, 60, 60))
-
-    # ---- date check: 1 italic line (wraps to 2), no red box ----
-    dc = wrap(d, DATE_CHECK, F_SERIF_I(9), W - 24)
-    yy = 962
-    for line in dc:
-        draw_centered(d, W // 2, yy, line, F_SERIF_I(9), INK)
+    # ---- date check: RED box (Rank #2) ----
+    dc_y, dc_h = 890, 44
+    d.rectangle([8, dc_y, W - 8, dc_y + dc_h], outline=RED2, width=2)
+    dc = wrap(d, DATE_CHECK, F_SANS(9), W - 40)
+    yy = dc_y + 5
+    for line in dc[:2]:
+        d.text((16, yy), line, font=F_SANS(9), fill=INK)
         yy += 12
+    if len(dc) > 2:
+        issues.append(f"date check {len(dc)} lines > 2")
+
     # ---- footer ----
-    draw_centered(d, W // 2, 988, FOOTER_SRC, F_SANS(8), (90, 90, 90))
-    draw_centered(d, W // 2, 1002, "THE WORLD — 19 NOVEMBER 2026 · 40 STORIES · 7 REGIONS · ONE PAGE",
+    draw_centered(d, W // 2, 942, FOOTER_SRC, F_SANS(8), (90, 90, 90))
+    draw_centered(d, W // 2, 956, "THE WORLD — 19 NOVEMBER 2026 · 40 STORIES · 7 REGIONS · ONE PAGE",
                   F_SANS_B(9), (70, 70, 70))
 
     im.save("entry.png")

@@ -1,13 +1,14 @@
-"""news-image-20261119 V1 — entry program (Python 3.13, standard library only).
+"""news-image-20261119 V2 — entry program (Python 3.13, standard library only).
 
 The entry is the image entry.png beside this file (a 1024x1024 PNG front page
 summing up 19 November 2026 world news, drawn beforehand with Pillow).
-V1 is built on our V2.6 architecture (white masthead, hero 1+2, horizontal
-grid, outline map + blue pins, numbers bar at the bottom, italic date check,
-WHITE paper), with 40 stories all from Thursday 19 November 2026: Shenzhen
-summit, GTA VI, Anthropic IPO, ICJ Rohingya judgment, COP31, Cyclone Akvan
-and 34 more. Own layout, own words — NOT a copy of Rank #1 or Rank #2.
-Palette: white paper + black + the 7 region colours. Serif headlines, sans body.
+V2 follows the Rank #2 LOOK (owner order): warm cream paper, numbers bar on
+TOP, 3 heroes across, box grid, navy dot-matrix map + red pins, Date Check
+red box. ALL sentences are REWRITTEN (different words from V1 and from Rank
+#2, same 40 stories/themes), with 40 stories all from Thursday 19 November
+2026: Shenzhen summit, GTA VI, Anthropic IPO, ICJ Rohingya judgment, COP31,
+Cyclone Akvan and 34 more.
+Palette: cream paper + black + dark red + navy. Serif headlines, sans body.
 This program only copies it to the path the grader reads:
     /output/entry.png
 Deterministic: the same bytes on every run, no network, no randomness.
